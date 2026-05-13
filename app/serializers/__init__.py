@@ -1,3 +1,10 @@
 from .job_serializer import JobSerializer, JobReqSerializer, JobDescSerializer, JobSavedSerializer
 from .account_serializer import AccountSerializer, RoleUpdateSerializer, ImageUploadSerializer
+from .location_serializer import LocationsSerializer, LocationTranslationsSerializer
+from .form_of_work_serializer import FormOfWorkSerializer, FormOfWorkTranslationSerializer
+from .company_serializer import CompanySerializer
+from .industry_serializer import IndustrySerializer, IndustryTranslationSerializer
+from .job_level_serializer import JobLevelSerializer, JobLevelTranslationSerializer
+from .location_serializer import LocationsSerializer, LocationTranslationsSerializer
+from .education_serializer import EducationSerializer, EducationTranslationSerializer
 
