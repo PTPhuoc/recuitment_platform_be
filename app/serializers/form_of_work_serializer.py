@@ -5,7 +5,7 @@ from app.models import FormOfWork, FormOfWorkTranslations
 class FormOfWorkTranslationSerializer(serializers.ModelSerializer):
     class Meta:
         model = FormOfWorkTranslations
-        fields = ["id",'form_of_work_id', 'language_code', 'name']
+        fields = ["id",'form_of_work', 'language_code', 'name']
 
 class FormOfWorkSerializer(serializers.ModelSerializer):
     translations = FormOfWorkTranslationSerializer(many=True, read_only=True)

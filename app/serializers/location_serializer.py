@@ -6,7 +6,7 @@ from app.models import LocationTranslations, Locations
 class LocationTranslationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = LocationTranslations
-        fields = ['id', 'language_code', 'location_id', 'name']
+        fields = ['id', 'language_code', 'location', 'name']
 
 
 class LocationsSerializer(serializers.ModelSerializer):

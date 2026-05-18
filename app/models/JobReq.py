@@ -4,7 +4,7 @@ from app.models import Job
 
 class JobReq(models.Model):
     id = ULIDField(primary_key=True, db_index=True)
-    job_id = models.OneToOneField(Job, on_delete=models.CASCADE, related_name='req', db_column='jobId')
+    job = models.OneToOneField(Job, on_delete=models.CASCADE, related_name='req', db_column='jobId')
     form_of_job = models.CharField(max_length=100, null=True, db_column="formOfJob", default='Không yêu cầu')
     location = models.CharField(max_length=100, null=True)
     quantity = models.IntegerField(default=0)

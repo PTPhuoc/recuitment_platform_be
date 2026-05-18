@@ -8,7 +8,7 @@ class JobSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'name': {'required': True},
             'source_link': {'required': True},
-            'company_id': {'required': True},
+            'company': {'required': True},
         }
 
 class JobSavedSerializer(serializers.ModelSerializer):
@@ -16,8 +16,8 @@ class JobSavedSerializer(serializers.ModelSerializer):
         model = JobSaved
         fields = '__all__'
         extra_kwargs = {
-            'account_id': {'required': True},
-            'job_id': {'required': True},
+            'account': {'required': True},
+            'job': {'required': True},
         }
 
 class JobDescSerializer(serializers.ModelSerializer):
@@ -25,7 +25,7 @@ class JobDescSerializer(serializers.ModelSerializer):
         model = JobDesc
         fields = '__all__'
         extra_kwargs = {
-            'job_id': {'required': True},
+            'job': {'required': True},
             'title': {'required': True},
             'description': {'required': True},
         }
@@ -35,5 +35,5 @@ class JobReqSerializer(serializers.ModelSerializer):
         model = JobReq
         fields = '__all__'
         extra_kwargs = {
-            'job_id': {'required': True},
+            'job': {'required': True},
         }

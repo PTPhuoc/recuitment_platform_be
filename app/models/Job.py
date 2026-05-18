@@ -4,7 +4,7 @@ from app.models import Company
 
 class Job(models.Model):
     id = ULIDField(primary_key=True, db_index=True)
-    company_id = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='job', db_column='companyId')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='job', db_column='companyId')
     name = models.CharField(max_length=255)
     source_link = models.TextField(null=True, db_index=True, db_column='sourceLink')
     description = models.TextField(null=True)

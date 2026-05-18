@@ -8,7 +8,7 @@ class CompanyLocation(models.Model):
     company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='company_locations', db_column='companyId')
     location = models.ForeignKey('Locations', on_delete=models.CASCADE, related_name='location_companies', db_column='locationId')
     detail_address = models.CharField(db_column='detailAddress', max_length=255, blank=True, null=True)
-    date_create = models.DateField(db_column='dateCreate', blank=True, null=True)
+    date_create = models.DateField(db_column='dateCreate', auto_now_add=True, blank=True, null=True)
 
     class Meta:
         db_table = 'CompanyLocation'
