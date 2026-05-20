@@ -1,3 +1,4 @@
+import cloudinary
 from rest_framework import serializers
 
 from app.models import Company, Industry, Locations, CompanyLocation, CompanyIndustry
@@ -10,10 +11,13 @@ class CompanySerializer(serializers.ModelSerializer):
     locations = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Locations.objects.all(), required=False
     )
+    logo_url = serializers.SerializerMethodField()
+    cover_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Company
-        fields = ['id', 'name', 'slug', 'trading_name', 'website_url', 'logo', 'cover_image',
+        fields = ['id', 'name', 'slug', 'trading_name', 'website_url', 'logo_public_id', 'logo_url',
+            'cover_public_id', 'cover_url',
                   'company_size', 'description', 'email_domain', 'is_claimed', 'is_verified',
                   'date_created', 'industries', 'locations']
         extra_kwargs = {
@@ -43,6 +47,17 @@ class CompanySerializer(serializers.ModelSerializer):
         if locations is not None:
             instance.locations.set(locations)
         return instance
+
+    def get_logo_url(self, obj):
+        if obj.logo_public_id:
+            return cloudinary.CloudinaryImage(obj.logo_public_id).build_url()
+        return None
+
+    def get_cover_url(self, obj):
+        if obj.cover_public_id:
+            return cloudinary.CloudinaryImage(obj.cover_public_id).build_url()
+        return None
+
 
 
 class CompanyIndustrySerializer(serializers.ModelSerializer):
