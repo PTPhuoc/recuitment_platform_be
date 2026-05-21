@@ -16,12 +16,14 @@ class CompanySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['id', 'name', 'slug', 'trading_name', 'website_url', 'logo_public_id', 'logo_url',
-            'cover_public_id', 'cover_url',
+        fields = ['id', 'name', 'slug', 'trading_name', 'website_url',
+                  'logo_public_id', 'logo_url',
+                  'cover_public_id', 'cover_url',
                   'company_size', 'description', 'email_domain', 'is_claimed', 'is_verified',
                   'date_created', 'industries', 'locations']
         extra_kwargs = {
             "name": {"required": True},
+            "slug": {"required": False},
             "company_size": {"required": True},
             "industries": {"required": True},
             "locations": {"required": True},
@@ -57,7 +59,6 @@ class CompanySerializer(serializers.ModelSerializer):
         if obj.cover_public_id:
             return cloudinary.CloudinaryImage(obj.cover_public_id).build_url()
         return None
-
 
 
 class CompanyIndustrySerializer(serializers.ModelSerializer):
