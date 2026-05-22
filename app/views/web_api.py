@@ -9,9 +9,10 @@ from rest_framework.status import HTTP_403_FORBIDDEN
 from django.db import models
 
 from app.models import Education, EducationTranslations, FormOfWork, FormOfWorkTranslations, Industry, \
-    IndustryTranslations, JobLevel, JobLevelTranslations, Locations, LocationTranslations
+    IndustryTranslations, JobLevel, JobLevelTranslations, Locations, LocationTranslations, Company
 from app.serializers import EducationSerializer, FormOfWorkSerializer, IndustrySerializer, JobLevelSerializer, \
     LocationsSerializer
+from app.serializers.company_serializer import CompanyCategoriesSerializer
 
 
 class WebAPI(viewsets.ModelViewSet):
@@ -23,6 +24,7 @@ class WebAPI(viewsets.ModelViewSet):
         industry = Industry.objects.all().order_by("-slug")
         jop_level = JobLevel.objects.all().order_by("-slug")
         location = Locations.objects.all().order_by("-slug")
+        company = Company.objects.all().order_by("-name")
         if lang:
             education = education.prefetch_related(
                 models.Prefetch("translations", queryset=EducationTranslations.objects.filter(language_code=lang))
@@ -45,4 +47,5 @@ class WebAPI(viewsets.ModelViewSet):
             "industry": IndustrySerializer(industry, many=True).data,
             "job_level": JobLevelSerializer(jop_level, many=True).data,
             "location": LocationsSerializer(location, many=True).data,
+            "company": CompanyCategoriesSerializer(company, many=True).data
         })

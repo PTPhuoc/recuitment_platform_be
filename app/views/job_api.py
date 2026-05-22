@@ -33,13 +33,12 @@ class JobAPI(viewsets.ModelViewSet):
 
     @action(methods=['post'], detail=False)
     def save(self, request):
-        data = request.data
         user = request.user
-
-        if user.role != "admin":
+        if user.role not in ["admin", "employer"]:
             return Response({'status': 'Not permitted', 'message': 'Your authentication not permission'},
                             status=status.HTTP_403_FORBIDDEN)
 
+        data = request.data
         if data.get('id'):
             job = get_object_or_404(Job, id=data.id)
             serializer = JobSerializer(job, data=data, partial=True)

@@ -61,6 +61,12 @@ class CompanySerializer(serializers.ModelSerializer):
         return None
 
 
+class CompanyCategoriesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ["id", "name"]
+
+
 class CompanyIndustrySerializer(serializers.ModelSerializer):
     class Meta:
         model = CompanyIndustry
