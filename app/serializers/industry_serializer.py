@@ -15,3 +15,17 @@ class IndustrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Industry
         fields = ['id', 'slug', 'translations']
+
+class IndustryWithTransSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Industry
+        fields = ['id', 'name']
+
+    def get_name(self, obj):
+        lang = self.context.get('language_code', "vie")
+        translation = obj.translations.filter(language_code=lang).first()
+        if translation:
+            return translation.name
+        return "No translation"

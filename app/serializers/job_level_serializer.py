@@ -15,3 +15,17 @@ class JobLevelSerializer(serializers.ModelSerializer):
     class Meta:
         model = JobLevel
         fields = ['id', 'slug', 'translations']
+
+class JobLevelWithTransSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobLevel
+        fields = ['id', 'name']
+
+    def get_name(self, obj):
+        lang = self.context.get('language_code', "vie")
+        translation = obj.translations.filter(language_code=lang).first()
+        if translation:
+            return translation.name
+        return "No translation"

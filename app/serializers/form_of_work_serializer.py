@@ -12,3 +12,16 @@ class FormOfWorkSerializer(serializers.ModelSerializer):
     class Meta:
         model = FormOfWork
         fields = ['id', 'slug', "translations"]
+
+class FormOfWorkWithTransSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    class Meta:
+        model = FormOfWork
+        fields = ['id', 'slug', "name"]
+
+    def get_name(self, obj):
+        lang = self.context.get("language_code", "vie")
+        translation = obj.translations.filter(language_code=lang).first()
+        if translation:
+            return translation.name
+        return "No translation"

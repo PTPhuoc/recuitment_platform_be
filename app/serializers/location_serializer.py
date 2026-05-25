@@ -14,3 +14,17 @@ class LocationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Locations
         fields = ['id', 'type', 'slug', 'parent_id', 'translations']
+
+class LocationWithTransSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Locations
+        fields = ["id", "name", "parent_id"]
+
+    def get_name(self, obj):
+        lang = self.context.get('language_code', "vie")
+        translation = obj.translations.filter(language_code=lang).first()
+        if translation:
+            return translation.name
+        return "No translation"
