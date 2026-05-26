@@ -19,3 +19,6 @@ from .Locations import Locations
 from .LocationTranslations import LocationTranslations
 from .CompanyIndustry import CompanyIndustry
 from .CompanyLocation import CompanyLocation
+from .JobReqIndustry import JobReqIndustry
+from .JobReqEducation import JobReqEducation
+from .JobReqFormOfWork import JobReqFormOfWork
