@@ -20,7 +20,7 @@ class JobAPI(viewsets.ModelViewSet):
             response.data["status"] = "Success"
             return response
         serializer = self.get_serializer(queryset, many=True)
-        return Response({'status': 'Success', 'job': serializer.data}, status=status.HTTP_200_OK)
+        return Response({'status': 'Success', 'jobs': serializer.data}, status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=True)
     def detail(self, request, pk=None):

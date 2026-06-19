@@ -17,7 +17,7 @@ class JobDescSerializer(serializers.ModelSerializer):
         model = JobDesc
         fields = '__all__'
         extra_kwargs = {
-            'job': {'required': True},
+            'job': {'read_only': True},
             'title': {'required': True},
             'description': {'required': True},
         }
@@ -28,7 +28,7 @@ class JobReqSerializer(serializers.ModelSerializer):
         model = JobReq
         fields = '__all__'
         extra_kwargs = {
-            'job': {'required': True},
+            'job': {'read_only': True},
         }
 
 
@@ -51,7 +51,18 @@ class JobSerializer(serializers.ModelSerializer):
             JobDesc.objects.create(job=job, **desc_item)
 
         if req_data:
-            JobReq.objects.create(job=job, **req_data)
+            form_of_work = req_data.pop('form_of_work', [])
+            educations = req_data.pop('educations', [])
+            industries = req_data.pop('industries', [])
+
+            job_req = JobReq.objects.create(job=job, **req_data)
+
+            if form_of_work:
+                job_req.form_of_work.set(form_of_work)
+            if educations:
+                job_req.educations.set(educations)
+            if industries:
+                job_req.industries.set(industries)
 
         return job
 
@@ -83,6 +94,18 @@ class JobSerializer(serializers.ModelSerializer):
 
         if req_data is not None:
             req_data.pop('job', None)
-            JobReq.objects.update_or_create(job=instance, defaults=req_data)
+
+            form_of_work = req_data.pop('form_of_work', None)
+            educations = req_data.pop('educations', None)
+            industries = req_data.pop('industries', None)
+
+            job_req, created = JobReq.objects.update_or_create(job=instance, defaults=req_data)
+
+            if form_of_work is not None:
+                job_req.form_of_work.set(form_of_work)
+            if educations is not None:
+                job_req.educations.set(educations)
+            if industries is not None:
+                job_req.industries.set(industries)
 
         return instance
