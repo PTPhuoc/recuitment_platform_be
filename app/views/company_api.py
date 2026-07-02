@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from app.models import Company
@@ -31,7 +32,7 @@ class CompanyAPI(viewsets.ModelViewSet):
         queryset = self.get_queryset().order_by("-name")
         return Response({"status": "Success", "company": CompanySerializer(queryset, many=True).data})
 
-    @action(methods=["post"], detail=False, parser_classes=[MultiPartParser, FormParser, JSONParser])
+    @action(methods=["post"], detail=False, parser_classes=[MultiPartParser, FormParser, JSONParser], permission_classes=[IsAuthenticated])
     def save(self, request):
         user = request.user
         if user.role not in ['employer', 'admin']:
@@ -87,7 +88,7 @@ class CompanyAPI(viewsets.ModelViewSet):
 
         return Response({"status": "Success", "company": CompanySerializer(company).data}, status=status_code)
 
-    @action(methods=["delete"], detail=False)
+    @action(methods=["delete"], detail=False, permission_classes=[IsAuthenticated])
     def item(self, request):
         user = request.user
         if user.role not in ['employer', 'admin']:

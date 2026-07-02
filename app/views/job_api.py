@@ -1,9 +1,12 @@
+from django.db.migrations import serializer
 from django.shortcuts import get_object_or_404, get_list_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status, viewsets
-from app.models import Job, JobReq, JobDesc
+from app.models import Job, JobReq, JobDesc, Company
 from app.serializers import JobSerializer, JobReqSerializer, JobDescSerializer, JobSavedSerializer
+from django.db.models import Q
 
 
 class JobAPI(viewsets.ModelViewSet):
@@ -12,26 +15,29 @@ class JobAPI(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def many_search(self, request):
-        queryset = self.get_queryset().order_by('-name')
+        page_number = request.query_params.get('page')
+        name = request.query_params.get('name')
+        company_name = request.query_params.get('company')
+        job_status = request.query_params.get('status')
+        queryset = self.get_queryset().order_by('-date_created')
+        filters = Q()
+        if name:
+            filters |= Q(name__icontains=name)
+        if company_name:
+            filters |= Q(company__name__icontains=company_name)
+        if job_status:
+            filters &= Q(status=job_status)
+        if filters:
+            queryset = queryset.filter(filters).distinct()
+
+        queryset = queryset.select_related("company")
         page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            response = self.get_paginated_response(serializer.data)
-            response.data["status"] = "Success"
-            return response
-        serializer = self.get_serializer(queryset, many=True)
-        return Response({'status': 'Success', 'jobs': serializer.data}, status=status.HTTP_200_OK)
+        serializer = self.get_serializer(page, many=True)
+        response = self.get_paginated_response(serializer.data)
+        response.data["status"] = "Success"
+        return response
 
-    @action(methods=['get'], detail=True)
-    def detail(self, request, pk=None):
-        job_req = get_object_or_404(JobReq, jobId=pk)
-        job_desc = get_list_or_404(JobDesc, jobId=pk)
-        req_serializer = JobReqSerializer(job_req, many=False)
-        desc_serializer = JobDescSerializer(job_desc, many=True)
-        return Response({'status': 'Success', 'require': req_serializer.data, 'description': desc_serializer.data},
-                        status=status.HTTP_200_OK)
-
-    @action(methods=['post'], detail=False)
+    @action(methods=['post'], detail=False, permission_classes=[IsAuthenticated])
     def save(self, request):
         user = request.user
         if user.role not in ["admin", "employer"]:
@@ -39,8 +45,12 @@ class JobAPI(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
 
         data = request.data
+        company_data = data.get('company')
+        if isinstance(company_data, dict):
+            data['company'] = company_data.get('id')
+
         if data.get('id'):
-            job = get_object_or_404(Job, id=data.id)
+            job = get_object_or_404(Job, id=data.get("id"))
             serializer = JobSerializer(job, data=data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -51,47 +61,18 @@ class JobAPI(viewsets.ModelViewSet):
             serializer.save()
             return Response({'status': 'Success', 'job': serializer.data}, status=status.HTTP_201_CREATED)
 
-    @action(methods=['post'], detail=False)
-    def require(self, request):
-        data = request.data
+    @action(methods=["delete"], detail=False, permission_classes=[IsAuthenticated])
+    def item(self, request):
         user = request.user
-
-        if user.role != "admin":
-            return Response({'status': 'Not permitted', 'message': 'Your authentication not permission'},
-                            status=status.HTTP_401_UNAUTHORIZED)
-
-        if data.get('id'):
-            job_req = get_object_or_404(JobReq, id=data.id)
-            serializer = JobReqSerializer(job_req, data=data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response({'status': 'Success', 'jobReq': serializer.data}, status=status.HTTP_200_OK)
-
-        else:
-            serializer = JobReqSerializer(data=data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response({'status': 'Success', 'jobReq': serializer.data}, status=status.HTTP_200_OK)
-
-    @action(methods=['post'], detail=False)
-    def desc(self, request):
-        data = request.data
-        user = request.user
-        if user.role != "admin":
+        if user.role not in ["admin", "employer"]:
             return Response({'status': 'Not permitted', 'message': 'Your authentication not permission'},
                             status=status.HTTP_403_FORBIDDEN)
-
-        if data.get('id'):
-            job_desc = get_object_or_404(JobDesc, id=data.id)
-            serializer = JobDescSerializer(job_desc, data=data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response({'status': 'Success', 'jobDesc': serializer.data}, status=status.HTTP_200_OK)
-        else:
-            serializer = JobDescSerializer(data=data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response({'status': 'Success', 'jobDesc': serializer.data}, status=status.HTTP_200_OK)
+        job_id = request.query_params.get('id')
+        if not job_id:
+            return Response({'status': 'Empty Value', 'message': 'Require ID of job'},)
+        job = get_object_or_404(Job, id=job_id)
+        job.delete()
+        return Response({'status': 'Success'}, status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=False)
     def follow(self, request):

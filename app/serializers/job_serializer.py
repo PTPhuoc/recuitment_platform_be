@@ -1,5 +1,6 @@
+import cloudinary
 from rest_framework import serializers
-from app.models import Job, JobSaved, JobDesc, JobReq
+from app.models import Job, Company, JobSaved, JobDesc, JobReq, FormOfWork, Education, Industry
 
 
 class JobSavedSerializer(serializers.ModelSerializer):
@@ -24,6 +25,15 @@ class JobDescSerializer(serializers.ModelSerializer):
 
 
 class JobReqSerializer(serializers.ModelSerializer):
+    form_of_work = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=FormOfWork.objects.all(), required=False
+    )
+    educations = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Education.objects.all(), required=False
+    )
+    industries = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Industry.objects.all(), required=False
+    )
     class Meta:
         model = JobReq
         fields = '__all__'
@@ -32,14 +42,27 @@ class JobReqSerializer(serializers.ModelSerializer):
         }
 
 
+class JobCompanySerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    class Meta:
+        model = Company
+        fields = ["id", "name", "image"]
+
+    def get_image(self, obj):
+        if obj.logo_public_id:
+            return cloudinary.CloudinaryImage(obj.logo_public_id).build_url()
+        return None
+
+
 class JobSerializer(serializers.ModelSerializer):
     descriptions = JobDescSerializer(many=True, required=False)
     require = JobReqSerializer(required=False)
+    company = JobCompanySerializer(read_only=True)
 
     class Meta:
         model = Job
-        fields = ["id", "company", "name", "source_link", "description", "status", "date_created", "date_limited",
-                  "descriptions", "require"]
+        fields = ["id", "company", "name", "source_link", "description", "status",
+                  "date_created", "date_limited", "descriptions", "require"]
 
     def create(self, validated_data):
         desc_data = validated_data.pop("descriptions", [])
@@ -57,12 +80,9 @@ class JobSerializer(serializers.ModelSerializer):
 
             job_req = JobReq.objects.create(job=job, **req_data)
 
-            if form_of_work:
-                job_req.form_of_work.set(form_of_work)
-            if educations:
-                job_req.educations.set(educations)
-            if industries:
-                job_req.industries.set(industries)
+            job_req.form_of_work.set(form_of_work)
+            job_req.educations.set(educations)
+            job_req.industries.set(industries)
 
         return job
 
@@ -75,12 +95,12 @@ class JobSerializer(serializers.ModelSerializer):
         instance.save()
 
         if desc_data is not None:
-            current_ids = set(instance.desc.values_list('id', flat=True))
+            current_ids = set(instance.descriptions.values_list('id', flat=True))
             new_ids = set()
             for desc_item in desc_data:
                 desc_id = desc_item.get('id')
                 if desc_id:
-                    desc = instance.desc.get(id=desc_id)
+                    desc = instance.descriptions.get(id=desc_id)
                     desc_serializer = JobDescSerializer(desc, data=desc_item, partial=True)
                     desc_serializer.is_valid(raise_exception=True)
                     desc_serializer.save()
@@ -90,10 +110,11 @@ class JobSerializer(serializers.ModelSerializer):
                     new_ids.add(new_desc.id)
             to_delete = current_ids - new_ids
             if to_delete:
-                instance.desc.filter(id__in=to_delete).delete()
+                instance.descriptions.filter(id__in=to_delete).delete()
 
         if req_data is not None:
             req_data.pop('job', None)
+            req_data.pop('id', None)
 
             form_of_work = req_data.pop('form_of_work', None)
             educations = req_data.pop('educations', None)
