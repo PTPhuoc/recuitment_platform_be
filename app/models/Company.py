@@ -16,6 +16,13 @@ class Company(models.Model):
     is_claimed = models.BooleanField(default=False, db_column='isClaimed')
     is_verified = models.BooleanField(default=False, db_column='isVerified')
     date_created = models.DateTimeField(auto_now_add=True, db_column='dateCreated')
+    status = models.CharField(
+        max_length=10,
+        choices=(("active", "Active"), ("delete", "Delete")),
+        default="active",
+        db_index=True,
+    )
+    date_deleted = models.DateTimeField(null=True, blank=True, db_column='dateDeleted')
 
     industries = models.ManyToManyField(
         'Industry',

@@ -24,6 +24,7 @@ class Account(AbstractBaseUser):
     phone_number = models.CharField(max_length=10, db_column="phoneNumber", null=True)
     role = models.CharField(max_length=100, default='pending')
     date_created = models.DateTimeField(auto_now_add=True, db_column='dateCreated')
+    date_deleted = models.DateTimeField(null=True, blank=True, default=None, db_column='dateDeleted')
     status = models.CharField(max_length=20, default='active')
     is_active = models.BooleanField(default=True, db_column='isActive')
 
