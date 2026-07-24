@@ -42,10 +42,13 @@ class WebAPI(viewsets.ModelViewSet):
                 models.Prefetch("translations", queryset=LocationTranslations.objects.filter(language_code=lang))
             )
         return Response({
-            "education": EducationSerializer(education, many=True).data,
-            "form_of_work": FormOfWorkSerializer(form_of_work, many=True).data,
-            "industry": IndustrySerializer(industry, many=True).data,
-            "job_level": JobLevelSerializer(jop_level, many=True).data,
-            "location": LocationsSerializer(location, many=True).data,
-            "company": CompanyCategoriesSerializer(company, many=True).data
+            "status": "Success",
+            "categories": {
+                "education": EducationSerializer(education, many=True).data,
+                "form_of_work": FormOfWorkSerializer(form_of_work, many=True).data,
+                "industry": IndustrySerializer(industry, many=True).data,
+                "job_level": JobLevelSerializer(jop_level, many=True).data,
+                "location": LocationsSerializer(location, many=True).data,
+                "company": CompanyCategoriesSerializer(company, many=True).data
+            }
         })

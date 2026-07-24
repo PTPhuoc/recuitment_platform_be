@@ -37,6 +37,18 @@ class JobAPI(viewsets.ModelViewSet):
         response.data["status"] = "Success"
         return response
 
+    @action(methods=["get"], detail=False)
+    def latest(self, request):
+        limit = request.query_params.get('limit', 3)
+        try:
+            limit = int(limit)
+        except ValueError:
+            limit = 3
+        limit = min(max(limit, 1), 10)
+        queryset = self.get_queryset().order_by('-date_created')[:limit]
+        serializer = JobSerializer(queryset, many=True)
+        return Response({"status": "Success", "jobs": serializer.data}, status=status.HTTP_200_OK)
+
     @action(methods=['post'], detail=False, permission_classes=[IsAuthenticated])
     def save(self, request):
         user = request.user
@@ -45,9 +57,6 @@ class JobAPI(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
 
         data = request.data
-        company_data = data.get('company')
-        if isinstance(company_data, dict):
-            data['company'] = company_data.get('id')
 
         if data.get('id'):
             job = get_object_or_404(Job, id=data.get("id"))

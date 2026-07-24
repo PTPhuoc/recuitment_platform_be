@@ -46,7 +46,7 @@ class JobCompanySerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     class Meta:
         model = Company
-        fields = ["id", "name", "image"]
+        fields = ["name", "image"]
 
     def get_image(self, obj):
         if obj.logo_public_id:
@@ -57,11 +57,11 @@ class JobCompanySerializer(serializers.ModelSerializer):
 class JobSerializer(serializers.ModelSerializer):
     descriptions = JobDescSerializer(many=True, required=False)
     require = JobReqSerializer(required=False)
-    company = JobCompanySerializer(read_only=True)
+    company_detail = JobCompanySerializer(source='company', read_only=True)
 
     class Meta:
         model = Job
-        fields = ["id", "company", "name", "source_link", "description", "status",
+        fields = ["id", "company", "company_detail", "name", "source_link", "description", "status",
                   "date_created", "date_limited", "descriptions", "require"]
 
     def create(self, validated_data):
