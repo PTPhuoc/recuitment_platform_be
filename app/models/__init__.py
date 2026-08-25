@@ -22,3 +22,4 @@ from .CompanyLocation import CompanyLocation
 from .JobReqIndustry import JobReqIndustry
 from .JobReqEducation import JobReqEducation
 from .JobReqFormOfWork import JobReqFormOfWork
+from .JobReqJobLevel import JobReqJobLevel

@@ -15,16 +15,19 @@ class JobAPI(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def many_search(self, request):
-        page_number = request.query_params.get('page')
         name = request.query_params.get('name')
-        company_name = request.query_params.get('company')
+        industry = request.query_params.get('company')
+        location = request.query_params.get('location')
         job_status = request.query_params.get('status')
         queryset = self.get_queryset().order_by('-date_created')
         filters = Q()
         if name:
             filters |= Q(name__icontains=name)
-        if company_name:
-            filters |= Q(company__name__icontains=company_name)
+        if industry:
+            filters |= Q(require__industries_id=industry)
+        if location:
+            filters |= Q(require__location_id=location)
+
         if job_status:
             filters &= Q(status=job_status)
         if filters:
@@ -48,6 +51,15 @@ class JobAPI(viewsets.ModelViewSet):
         queryset = self.get_queryset().order_by('-date_created')[:limit]
         serializer = JobSerializer(queryset, many=True)
         return Response({"status": "Success", "jobs": serializer.data}, status=status.HTTP_200_OK)
+
+    @action(methods=["get"], detail=False)
+    def item_detail(self, request):
+        job_id = request.query_params.get('id')
+        if not job_id:
+            return Response({'status': 'Empty Value', 'message': 'Require ID of job'},)
+        job = get_object_or_404(Job, id=job_id)
+        serializer = JobSerializer(job)
+        return Response({'status': 'Success', 'job': serializer.data}, status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=False, permission_classes=[IsAuthenticated])
     def save(self, request):

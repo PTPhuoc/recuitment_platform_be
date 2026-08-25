@@ -10,6 +10,7 @@ class JobReq(models.Model):
     quantity = models.IntegerField(default=0)
     industries = models.ManyToManyField("Industry", through="JobReqIndustry", related_name='job_req_industries')
     educations = models.ManyToManyField("Education", through="JobReqEducation", related_name='job_req_educations')
+    job_level = models.ManyToManyField("JobLevel", through="JobReqJobLevel", related_name='job_req_job_level')
     max_salary = models.IntegerField(default=0)
     min_salary = models.IntegerField(default=0)
     max_experience = models.IntegerField(default=0)

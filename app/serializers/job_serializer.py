@@ -1,6 +1,6 @@
 import cloudinary
 from rest_framework import serializers
-from app.models import Job, Company, JobSaved, JobDesc, JobReq, FormOfWork, Education, Industry
+from app.models import Job, Company, JobSaved, JobDesc, JobReq, FormOfWork, Education, Industry, JobLevel
 
 
 class JobSavedSerializer(serializers.ModelSerializer):
@@ -33,6 +33,9 @@ class JobReqSerializer(serializers.ModelSerializer):
     )
     industries = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Industry.objects.all(), required=False
+    )
+    job_level = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=JobLevel.objects.all(), required=False
     )
     class Meta:
         model = JobReq
@@ -77,12 +80,14 @@ class JobSerializer(serializers.ModelSerializer):
             form_of_work = req_data.pop('form_of_work', [])
             educations = req_data.pop('educations', [])
             industries = req_data.pop('industries', [])
+            job_level = req_data.pop('job_level', [])
 
             job_req = JobReq.objects.create(job=job, **req_data)
 
             job_req.form_of_work.set(form_of_work)
             job_req.educations.set(educations)
             job_req.industries.set(industries)
+            job_req.job_level.set(job_level)
 
         return job
 
@@ -119,6 +124,7 @@ class JobSerializer(serializers.ModelSerializer):
             form_of_work = req_data.pop('form_of_work', None)
             educations = req_data.pop('educations', None)
             industries = req_data.pop('industries', None)
+            job_level = req_data.pop('job_level', None)
 
             job_req, created = JobReq.objects.update_or_create(job=instance, defaults=req_data)
 
@@ -128,5 +134,7 @@ class JobSerializer(serializers.ModelSerializer):
                 job_req.educations.set(educations)
             if industries is not None:
                 job_req.industries.set(industries)
+            if job_level is not None:
+                job_req.job_level.set(job_level)
 
         return instance
