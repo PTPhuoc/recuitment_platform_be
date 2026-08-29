@@ -1,4 +1,3 @@
-from django.db.migrations import serializer
 from django.shortcuts import get_object_or_404, get_list_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -16,18 +15,34 @@ class JobAPI(viewsets.ModelViewSet):
     @action(methods=['get'], detail=False)
     def many_search(self, request):
         name = request.query_params.get('name')
-        industry = request.query_params.get('company')
+        industry = request.query_params.get("industry")
         location = request.query_params.get('location')
         job_status = request.query_params.get('status')
+        form_of_work = request.query_params.getlist('form_of_work')
+        educations = request.query_params.getlist('educations')
+        experience = request.query_params.get('experience')
         queryset = self.get_queryset().order_by('-date_created')
         filters = Q()
         if name:
             filters |= Q(name__icontains=name)
         if industry:
-            filters |= Q(require__industries_id=industry)
+            filters |= Q(require__industries__id=industry)
         if location:
-            filters |= Q(require__location_id=location)
-
+            filters |= Q(require__location__id=location)
+        if experience:
+            try:
+                exp_val = int(experience)
+            except ValueError:
+                return Response(
+                    {'status': 'Error', 'message': 'Experience must be an integer'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            filters &= Q(require__min_experience__lte=exp_val) & (
+                    Q(require__max_experience=0) | Q(require__max_experience__gte=exp_val))
+        if len(educations) > 0:
+            filters &= Q(require__educations__id__in=educations)
+        if len(form_of_work) > 0:
+            filters &= Q(require__form_of_work__id__in=form_of_work)
         if job_status:
             filters &= Q(status=job_status)
         if filters:
@@ -53,10 +68,25 @@ class JobAPI(viewsets.ModelViewSet):
         return Response({"status": "Success", "jobs": serializer.data}, status=status.HTTP_200_OK)
 
     @action(methods=["get"], detail=False)
+    def items_company(self, request):
+        company_id = request.query_params.get('id')
+        if not company_id:
+            return Response(
+                {'status': 'Error', 'message': 'Company ID is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        queryset = self.get_queryset().filter(company=company_id).order_by("-date_created")
+        serializer = JobSerializer(queryset, many=True)
+        return Response(
+            {"status": "Success", "jobs": serializer.data},
+            status=status.HTTP_200_OK
+        )
+
+    @action(methods=["get"], detail=False)
     def item_detail(self, request):
         job_id = request.query_params.get('id')
         if not job_id:
-            return Response({'status': 'Empty Value', 'message': 'Require ID of job'},)
+            return Response({'status': 'Empty Value', 'message': 'Require ID of job'}, )
         job = get_object_or_404(Job, id=job_id)
         serializer = JobSerializer(job)
         return Response({'status': 'Success', 'job': serializer.data}, status=status.HTTP_200_OK)
@@ -90,7 +120,7 @@ class JobAPI(viewsets.ModelViewSet):
                             status=status.HTTP_403_FORBIDDEN)
         job_id = request.query_params.get('id')
         if not job_id:
-            return Response({'status': 'Empty Value', 'message': 'Require ID of job'},)
+            return Response({'status': 'Empty Value', 'message': 'Require ID of job'}, )
         job = get_object_or_404(Job, id=job_id)
         job.delete()
         return Response({'status': 'Success'}, status=status.HTTP_200_OK)

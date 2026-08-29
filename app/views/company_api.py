@@ -27,6 +27,16 @@ class CompanyAPI(viewsets.ModelViewSet):
         response.data["status"] = "Success"
         return response
 
+    @action(methods=['get'], detail=False)
+    def item_detail(self, request):
+        company_id = request.query_params.get('id')
+        if not company_id:
+            return Response({'status': 'Empty Value', 'message': 'Missing "id" field'}, status=status.HTTP_400_BAD_REQUEST)
+
+        company = get_object_or_404(Company, id=company_id)
+        serializer = CompanySerializer(company)
+        return Response({"status": "Success", "company": serializer.data}, status=200)
+
     @action(methods=["get"], detail=False)
     def many(self, request):
         queryset = self.get_queryset().order_by("-name")
