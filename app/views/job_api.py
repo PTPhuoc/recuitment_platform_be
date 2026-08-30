@@ -21,6 +21,7 @@ class JobAPI(viewsets.ModelViewSet):
         form_of_work = request.query_params.getlist('form_of_work')
         educations = request.query_params.getlist('educations')
         experience = request.query_params.get('experience')
+        salary = request.query_params.get('salary')
         queryset = self.get_queryset().order_by('-date_created')
         filters = Q()
         if name:
@@ -29,16 +30,39 @@ class JobAPI(viewsets.ModelViewSet):
             filters |= Q(require__industries__id=industry)
         if location:
             filters |= Q(require__location__id=location)
+        if salary:
+            try:
+                if salary == "0":
+                    filters &= Q(require__max_salary=0) & Q(require__min_salary=0)
+                elif salary.startswith("-"):
+                    value = int(salary[1:])
+                    filters &= Q(require__max_salary__lte=value)
+                elif salary.endswith("+"):
+                    value = int(salary[:-1])
+                    filters &= Q(require__min_salary__gte=value)
+                elif '-' in salary:
+                    parts = salary.split('-')
+                    low = int(parts[0])
+                    high = int(parts[1])
+                    filters &= Q(require__min_salary__gte=low) & (
+                                Q(require__max_salary=0) | Q(require__max_salary__lte=high))
+                else:
+                    pass
+            except ValueError:
+                return Response(
+                    {'status': 'Error', 'message': 'Salary must be an integer'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         if experience:
             try:
                 exp_val = int(experience)
+                filters &= Q(require__min_experience__lte=exp_val) & (
+                        Q(require__max_experience=0) | Q(require__max_experience__gte=exp_val))
             except ValueError:
                 return Response(
                     {'status': 'Error', 'message': 'Experience must be an integer'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            filters &= Q(require__min_experience__lte=exp_val) & (
-                    Q(require__max_experience=0) | Q(require__max_experience__gte=exp_val))
         if len(educations) > 0:
             filters &= Q(require__educations__id__in=educations)
         if len(form_of_work) > 0:
